@@ -80,29 +80,39 @@ func Solve(g *model.Grid) *Result {
 		}
 	}
 
+	// 3. 預處理：建立未知格索引到受影響約束的映射
+	uIdxToConstraints := make([][]int, len(unknownPos))
+	for i, cst := range constraints {
+		for _, uIdx := range cst.uIndices {
+			uIdxToConstraints[uIdx] = append(uIdxToConstraints[uIdx], i)
+		}
+	}
+
 	totalValidConfigs := 0
 	mineCounts := make([]int, len(unknownPos))
 	currentMines := make([]bool, len(unknownPos))
+	iterations := 0
+	const maxIterations = 1000000 // 安全限制：預防過度計算
 
-	// 3. 回溯法 (只針對受影響的約束進行快速檢查)
+	// 4. 回溯法 (優化後的剪枝檢查)
 	var backtrack func(uIdx int)
 	backtrack = func(uIdx int) {
-		// 剪枝檢查：只檢查受當前決策影響的約束
+		iterations++
+		if iterations > maxIterations {
+			return
+		}
+
+		// 剪枝檢查：只檢查受上一格決策影響的約束
 		if uIdx > 0 {
-			// lastUIdx := uIdx - 1 // This variable is not used.
-			for i := range constraints {
-				if !constraints[i].isPossible(currentMines, uIdx) {
+			lastUIdx := uIdx - 1
+			for _, cIdx := range uIdxToConstraints[lastUIdx] {
+				if !constraints[cIdx].isPossible(currentMines, uIdx) {
 					return
 				}
 			}
 		}
 
 		if uIdx == len(unknownPos) {
-			// 到達末端，所有未知格都已決定，進行最終驗證
-			// 這裡的 isPossible 已經包含了最終驗證邏輯，
-			// 只要所有約束都通過 isPossible(..., len(unknownPos)) 檢查，就代表配置有效
-			// 因為在 uIdx == len(unknownPos) 時，unassignedCount 會是 0，
-			// isPossible 會檢查 assignedMines == c.target
 			totalValidConfigs++
 			for i := range unknownPos {
 				if currentMines[i] {
@@ -112,7 +122,7 @@ func Solve(g *model.Grid) *Result {
 			return
 		}
 
-		// 分支：放雷 or 不放雷
+		// 分支
 		currentMines[uIdx] = false
 		backtrack(uIdx + 1)
 
@@ -121,6 +131,10 @@ func Solve(g *model.Grid) *Result {
 	}
 
 	backtrack(0)
+
+	if iterations > maxIterations {
+		res.Solvable = false // 標記為無法在時限內解出
+	}
 
 	if totalValidConfigs > 0 {
 		for i, pos := range unknownPos {

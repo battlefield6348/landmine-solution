@@ -1,0 +1,15 @@
+# Binaries for programs and plugins
+solver
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# WebAssembly binary (Optional: if you want to host on GitHub Pages, don't ignore docs/*.wasm)
+# docs/main.wasm
+
+# OS metadata
+.DS_Store
+.DS_Store?
+Thumbs.db

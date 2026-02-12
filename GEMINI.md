@@ -7,8 +7,10 @@
 本專案採用標準 Golang 目錄結構：
 
 - `cmd/solver/`: 程式入口點，負責處理 CLI 輸入與輸出。
+- `cmd/wasm/`: WebAssembly 入口點，負責與 JavaScript 互動。
 - `internal/model/`: 定義盤面 (Grid) 與儲存格 (Cell) 的資料結構。
 - `internal/solver/`: 核心演算法，計算未解格子的地雷機率。
+- `docs/`: 網頁版靜態檔案，包含編譯後的 WASM 與 GitHub Pages 頁面。
 
 ## 核心邏輯
 

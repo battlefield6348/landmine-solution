@@ -29,6 +29,8 @@ function initGrid() {
     renderGrid();
 }
 
+let focusedIndex = null;
+
 function renderGrid() {
     const gridEl = document.getElementById('grid');
     gridEl.innerHTML = '';
@@ -37,48 +39,61 @@ function renderGrid() {
         const div = document.createElement('div');
         div.className = `cell ${getCellClass(cell.state)}`;
         div.innerText = getCellText(cell.state);
-        div.setAttribute('tabindex', '0'); // 使格子可以被聚焦（鍵盤操作）
+        div.setAttribute('tabindex', '0');
+        div.dataset.index = index;
 
-        // 點擊事件：聚焦並循環切換（保留原意）
+        // 點擊：僅聚焦，不改數字
         div.onclick = () => {
+            focusedIndex = index;
             div.focus();
-            cell.state = (cell.state + 2) % 10 - 1; // -1 -> 0 -> 1 ... -> 8 -> -1
-            renderGrid();
         };
 
-        // 鍵盤事件：支援直接輸入
+        // 鍵盤事件
         div.onkeydown = (e) => {
+            focusedIndex = index;
+            let handled = true;
+
             if (e.key >= '0' && e.key <= '8') {
                 cell.state = parseInt(e.key);
             } else if (e.key.toLowerCase() === 'f') {
-                cell.state = -2; // 旗幟
+                cell.state = -2;
             } else if (e.key.toLowerCase() === 'u' || e.key === 'Backspace' || e.key === 'Delete') {
-                cell.state = -1; // 未解
+                cell.state = -1;
             } else if (e.key.toLowerCase() === 'e') {
-                cell.state = 0; // 空白
+                cell.state = 0;
+            } else if (e.key === 'ArrowRight') {
+                focusedIndex = Math.min(cells.length - 1, index + 1);
+            } else if (e.key === 'ArrowLeft') {
+                focusedIndex = Math.max(0, index - 1);
+            } else if (e.key === 'ArrowDown') {
+                focusedIndex = Math.min(cells.length - 1, index + size);
+            } else if (e.key === 'ArrowUp') {
+                focusedIndex = Math.max(0, index - size);
             } else {
-                return; // 其他按鍵不處理
+                handled = false;
             }
-            e.preventDefault();
-            renderGrid();
 
-            // 保持聚焦在下一個格子（選配：優化體驗）
-            const nextIdx = index + 1;
-            if (nextIdx < cells.length) {
-                setTimeout(() => {
-                    const allCells = document.querySelectorAll('.cell');
-                    allCells[nextIdx].focus();
-                }, 0);
+            if (handled) {
+                e.preventDefault();
+                renderGrid();
+                // 渲染完後自動聚焦到新的位置
+                const allCells = document.querySelectorAll('.cell');
+                if (allCells[focusedIndex]) {
+                    allCells[focusedIndex].focus();
+                }
             }
         };
 
-        // 右鍵事件：切換旗幟
+        // 右鍵：旗幟
         div.oncontextmenu = (e) => {
             e.preventDefault();
+            focusedIndex = index;
             div.focus();
-            if (cell.state === -2) cell.state = -1;
-            else cell.state = -2;
+            cell.state = (cell.state === -2) ? -1 : -2;
             renderGrid();
+            // 保持聚焦
+            const allCells = document.querySelectorAll('.cell');
+            allCells[focusedIndex].focus();
         };
 
         if (cell.probability !== undefined && cell.state === -1) {

@@ -7,12 +7,14 @@ import (
 // Result 包含解題後的機率資訊
 type Result struct {
 	Probabilities [][]float64
+	Solvable      bool
 }
 
 // Solve 計算盤面上每個未知格子的地雷機率
 func Solve(g *model.Grid) *Result {
 	res := &Result{
 		Probabilities: make([][]float64, g.Size),
+		Solvable:      true,
 	}
 	for i := 0; i < g.Size; i++ {
 		res.Probabilities[i] = make([]float64, g.Size)
@@ -111,6 +113,8 @@ func Solve(g *model.Grid) *Result {
 		for i, pos := range unknownPos {
 			res.Probabilities[pos[0]][pos[1]] = float64(mineCounts[i]) / float64(totalValidConfigs)
 		}
+	} else if len(unknownPos) > 0 {
+		res.Solvable = false
 	}
 
 	return res

@@ -146,11 +146,20 @@ function solve() {
 
     // 將狀態轉為 Go 預期的格式
     const states = cells.map(c => c.state);
-    const probs = solveMinesweeper(size, states);
+    const result = solveMinesweeper(size, states);
+
+    if (!result.solvable) {
+        alert("⚠️ 偵測到邏輯矛盾！目前的盤面配置在踩地雷規則下是不可能的，請檢查數字與旗幟是否正確。");
+        cells.forEach(c => c.probability = undefined);
+        renderGrid();
+        return;
+    }
+
+    const { probabilities } = result;
 
     // 更新結果
     cells.forEach((cell, i) => {
-        cell.probability = probs[i];
+        cell.probability = probabilities[i];
     });
     renderGrid();
 }

@@ -44,5 +44,10 @@ func solve(this js.Value, args []js.Value) any {
 		}
 	}
 
-	return probabilities
+	// 將結果封裝成 JavaScript 物件
+	response := js.Global().Get("Object").New()
+	response.Set("probabilities", probabilities)
+	response.Set("solvable", result.Solvable)
+
+	return response
 }

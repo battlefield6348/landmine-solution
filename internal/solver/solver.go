@@ -45,21 +45,34 @@ func Solve(g *model.Grid) *Result {
 
 			// 找出此數字格周圍的未知格索引與已確定的旗幟數
 			cst := constraint{
-				target: int(state),
-				uIndices: []int{},
-				knownMines: 0,
+				target:           int(state),
+				uIndices:         []int{},
+				knownMines:       0,
+				missingNeighbors: 0,
 			}
-			neighbors := g.GetNeighbors(r, c)
-			for _, n := range neighbors {
-				if g.Cells[n[0]][n[1]].State == model.StateFlag {
-					cst.knownMines++
-				} else if g.Cells[n[0]][n[1]].State == model.StateUnknown {
-					// 找對應的 unknownPos 索引
-					for i, upos := range unknownPos {
-						if upos[0] == n[0] && upos[1] == n[1] {
-							cst.uIndices = append(cst.uIndices, i)
-							break
+
+			// 計算實際鄰居與遺失的鄰居（在盤面外的）
+			for dr := -1; dr <= 1; dr++ {
+				for dc := -1; dc <= 1; dc++ {
+					if dr == 0 && dc == 0 {
+						continue
+					}
+					nr, nc := r+dr, c+dc
+					if nr >= 0 && nr < g.Size && nc >= 0 && nc < g.Size {
+						// 盤面內的鄰居
+						if g.Cells[nr][nc].State == model.StateFlag {
+							cst.knownMines++
+						} else if g.Cells[nr][nc].State == model.StateUnknown {
+							for i, upos := range unknownPos {
+								if upos[0] == nr && upos[1] == nc {
+									cst.uIndices = append(cst.uIndices, i)
+									break
+								}
+							}
 						}
+					} else {
+						// 盤面外的鄰居
+						cst.missingNeighbors++
 					}
 				}
 			}
@@ -121,9 +134,10 @@ func Solve(g *model.Grid) *Result {
 }
 
 type constraint struct {
-	target     int   // 目標雷數
-	uIndices   []int // 周圍未知格在 unknownPos 中的索引
-	knownMines int   // 周圍已確定的旗幟數
+	target           int   // 目標雷數
+	uIndices         []int // 周圍未知格在 unknownPos 中的索引
+	knownMines       int   // 周圍已確定的旗幟數
+	missingNeighbors int   // 在盤面外的鄰居數量 (局部地圖用)
 }
 
 // isPossible 檢查在目前的配置下，此約束是否還有可能成立
@@ -145,14 +159,21 @@ func (c *constraint) isPossible(mines []bool, currentUIdx int) bool {
 	if assignedMines > c.target {
 		return false
 	}
-	// 2. 即使剩下的全放雷也湊不到目標
-	if assignedMines+unassignedCount < c.target {
+
+	// 2. 即使剩下的全放雷(內部+外部)也湊不到目標
+	// 修正：必須考慮盤面外的鄰居(missingNeighbors)
+	if assignedMines+unassignedCount+c.missingNeighbors < c.target {
 		return false
 	}
-	
-	// 如果所有未知格都已決定 (unassignedCount == 0)，則必須精確匹配
-	if unassignedCount == 0 && assignedMines != c.target {
-		return false
+
+	// 如果內部所有未知格都已決定 (unassignedCount == 0)
+	if unassignedCount == 0 {
+		// 在內部全決定的情況下，外部必須能補足剩下的雷
+		// 規則：(目標 - 內部已確定的雷) 必須小於等於 外部空間
+		remainingNeeded := c.target - assignedMines
+		if remainingNeeded < 0 || remainingNeeded > c.missingNeighbors {
+			return false
+		}
 	}
 
 	return true

@@ -12,7 +12,7 @@ function initGrid() {
     const gridEl = document.getElementById('grid');
     gridEl.style.gridTemplateColumns = `repeat(${size}, 50px)`;
     gridEl.innerHTML = '';
-    
+
     // 初始化資料
     const newCells = [];
     for (let r = 0; r < size; r++) {
@@ -32,21 +32,50 @@ function initGrid() {
 function renderGrid() {
     const gridEl = document.getElementById('grid');
     gridEl.innerHTML = '';
-    
+
     cells.forEach((cell, index) => {
         const div = document.createElement('div');
         div.className = `cell ${getCellClass(cell.state)}`;
         div.innerText = getCellText(cell.state);
-        
-        // 點擊事件
+        div.setAttribute('tabindex', '0'); // 使格子可以被聚焦（鍵盤操作）
+
+        // 點擊事件：聚焦並循環切換（保留原意）
         div.onclick = () => {
+            div.focus();
             cell.state = (cell.state + 2) % 10 - 1; // -1 -> 0 -> 1 ... -> 8 -> -1
             renderGrid();
         };
 
-        // 右鍵事件
+        // 鍵盤事件：支援直接輸入
+        div.onkeydown = (e) => {
+            if (e.key >= '0' && e.key <= '8') {
+                cell.state = parseInt(e.key);
+            } else if (e.key.toLowerCase() === 'f') {
+                cell.state = -2; // 旗幟
+            } else if (e.key.toLowerCase() === 'u' || e.key === 'Backspace' || e.key === 'Delete') {
+                cell.state = -1; // 未解
+            } else if (e.key.toLowerCase() === 'e') {
+                cell.state = 0; // 空白
+            } else {
+                return; // 其他按鍵不處理
+            }
+            e.preventDefault();
+            renderGrid();
+
+            // 保持聚焦在下一個格子（選配：優化體驗）
+            const nextIdx = index + 1;
+            if (nextIdx < cells.length) {
+                setTimeout(() => {
+                    const allCells = document.querySelectorAll('.cell');
+                    allCells[nextIdx].focus();
+                }, 0);
+            }
+        };
+
+        // 右鍵事件：切換旗幟
         div.oncontextmenu = (e) => {
             e.preventDefault();
+            div.focus();
             if (cell.state === -2) cell.state = -1;
             else cell.state = -2;
             renderGrid();
@@ -64,7 +93,7 @@ function renderGrid() {
                 div.style.backgroundColor = `rgba(248, 81, 73, ${alpha})`;
             }
         }
-        
+
         gridEl.appendChild(div);
     });
 }
@@ -103,7 +132,7 @@ function solve() {
     // 將狀態轉為 Go 預期的格式
     const states = cells.map(c => c.state);
     const probs = solveMinesweeper(size, states);
-    
+
     // 更新結果
     cells.forEach((cell, i) => {
         cell.probability = probs[i];

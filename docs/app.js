@@ -19,15 +19,20 @@ function initGrid(oldSize = size) {
     const newCells = [];
     for (let r = 0; r < size; r++) {
         for (let c = 0; c < size; c++) {
-            // 嘗試保留舊有的值 (考慮位移)
-            let existing = cells.find(it => it.r === r - offset && it.c === c - offset);
+            // 尋找舊座標系統中的相對應格子
+            const oldR = r - offset;
+            const oldC = c - offset;
+            let existing = cells.find(it => it.r === oldR && it.c === oldC);
+
             newCells.push({
-                r, c,
-                state: existing ? existing.state : -1 // 預設未解 (-1)
+                r: r,
+                c: c,
+                state: existing ? existing.state : -1
             });
         }
     }
     cells = newCells;
+
     renderGrid();
 }
 

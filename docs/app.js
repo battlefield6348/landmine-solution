@@ -8,17 +8,19 @@ WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((resu
     console.log("Go WASM Loaded");
 });
 
-function initGrid() {
+function initGrid(oldSize = size) {
     const gridEl = document.getElementById('grid');
     gridEl.style.gridTemplateColumns = `repeat(${size}, 50px)`;
     gridEl.innerHTML = '';
+
+    const offset = Math.floor((size - oldSize) / 2);
 
     // 初始化資料
     const newCells = [];
     for (let r = 0; r < size; r++) {
         for (let c = 0; c < size; c++) {
-            // 嘗試保留舊有的值
-            let existing = cells.find(it => it.r === r && it.c === c);
+            // 嘗試保留舊有的值 (考慮位移)
+            let existing = cells.find(it => it.r === r - offset && it.c === c - offset);
             newCells.push({
                 r, c,
                 state: existing ? existing.state : -1 // 預設未解 (-1)
@@ -128,8 +130,10 @@ function getCellText(state) {
 }
 
 function changeSize(delta) {
+    const oldSize = size;
     size = Math.max(1, size + delta);
-    initGrid();
+    if (size === oldSize) return;
+    initGrid(oldSize);
 }
 
 function resetGrid() {

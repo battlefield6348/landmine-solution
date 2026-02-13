@@ -21,14 +21,20 @@ func NewGrid(size int) *Grid {
 	return g
 }
 
-// Resize 調整盤面尺寸並儘可能保留現有資料
+// Resize 調整盤面尺寸並儘可能保留現有資料 (採中心對齊)
 func (g *Grid) Resize(newSize int) {
+	if newSize == g.Size {
+		return
+	}
+	offset := (newSize - g.Size) / 2
 	newCells := make([][]Cell, newSize)
 	for r := 0; r < newSize; r++ {
 		newCells[r] = make([]Cell, newSize)
 		for c := 0; c < newSize; c++ {
-			if r < g.Size && c < g.Size {
-				newCells[r][c] = g.Cells[r][c]
+			oldR := r - offset
+			oldC := c - offset
+			if oldR >= 0 && oldR < g.Size && oldC >= 0 && oldC < g.Size {
+				newCells[r][c] = g.Cells[oldR][oldC]
 			} else {
 				newCells[r][c] = Cell{State: StateUnknown}
 			}
@@ -37,6 +43,7 @@ func (g *Grid) Resize(newSize int) {
 	g.Cells = newCells
 	g.Size = newSize
 }
+
 
 // GetNeighbors 取得坐標 (r, c) 周圍的鄰居座標
 func (g *Grid) GetNeighbors(r, c int) [][2]int {

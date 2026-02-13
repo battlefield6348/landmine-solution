@@ -36,17 +36,17 @@ func main() {
 		}
 
 		if input == "expand" {
-			grid.Resize(grid.Size + 1)
-			fmt.Printf("✅ 盤面已擴展為 %dx%d\n", grid.Size, grid.Size)
+			grid.Resize(grid.Size + 2)
+			fmt.Printf("✅ 盤面已擴展為 %dx%d (各邊加一排)\n", grid.Size, grid.Size)
 			continue
 		}
 
 		if input == "shrink" {
-			if grid.Size > 1 {
-				grid.Resize(grid.Size - 1)
-				fmt.Printf("✅ 盤面已縮減為 %dx%d\n", grid.Size, grid.Size)
+			if grid.Size > 2 {
+				grid.Resize(grid.Size - 2)
+				fmt.Printf("✅ 盤面已縮減為 %dx%d (各邊縮一排)\n", grid.Size, grid.Size)
 			} else {
-				fmt.Println("❌ 錯誤: 尺寸已達最小值")
+				fmt.Println("❌ 錯誤: 尺寸已達最小值 (須大於 2 才能對稱縮小)")
 			}
 			continue
 		}

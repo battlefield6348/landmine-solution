@@ -158,14 +158,12 @@ function solve() {
     const result = solveMinesweeper(size, states);
 
     if (!result.solvable) {
-        const hasSomeProb = result.probabilities.some(p => p > 0);
-        if (hasSomeProb) {
-            // 這個情況目前較少見，主要是為了未來擴充
-            alert("⚠️ 計算不完全，可能存在部分矛盾。");
+        if (result.timeout) {
+            alert("💤 運算超時！由於未知格連接過於複雜，計算量已超過上限。請嘗試先標記一些旗幟或縮小範圍。");
         } else {
-            // 檢查是否是因為 len(unknownPos) 太大
-            if (states.filter(s => s === -1).length > 40) {
-                alert("💤 運算範圍過大！由於未知格數量過多且互相連結，為了避免網頁當掉已停止計算。請嘗試先標記一些旗幟或縮小範圍。");
+            // 檢查是否是因為 len(unknownPos) 太大 (雖然現在有了優化，但還是保留一個保險)
+            if (states.filter(s => s === -1).length > 100) {
+                alert("💤 運算範圍過大！請嘗試先標記一些旗幟或縮小範圍。");
             } else {
                 alert("⚠️ 偵測到邏輯矛盾！目前的盤面配置在踩地雷規則下是不可能的，請檢查數字與旗幟是否正確。");
             }

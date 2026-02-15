@@ -8,6 +8,7 @@ import (
 type Result struct {
 	Probabilities [][]float64
 	Solvable      bool
+	Timeout       bool
 }
 
 // Solve 計算盤面上每個未知格子的地雷機率
@@ -80,8 +81,39 @@ func Solve(g *model.Grid) *Result {
 		}
 	}
 
-	// 3. 預處理：建立未知格索引到受影響約束的映射
-	uIdxToConstraints := make([][]int, len(unknownPos))
+	// 3. 找出哪些未知格是有約束的
+	isConstrained := make([]bool, len(unknownPos))
+	constrainedCount := 0
+	for _, cst := range constraints {
+		for _, uIdx := range cst.uIndices {
+			if !isConstrained[uIdx] {
+				isConstrained[uIdx] = true
+				constrainedCount++
+			}
+		}
+	}
+
+	// 建立受約束未知格的索引映射
+	constrainedToOriginal := make([]int, 0, constrainedCount)
+	originalToConstrained := make(map[int]int)
+	for i, constrained := range isConstrained {
+		if constrained {
+			originalToConstrained[i] = len(constrainedToOriginal)
+			constrainedToOriginal = append(constrainedToOriginal, i)
+		}
+	}
+
+	// 更新約束中的索引
+	for i := range constraints {
+		newIndices := make([]int, len(constraints[i].uIndices))
+		for j, oldIdx := range constraints[i].uIndices {
+			newIndices[j] = originalToConstrained[oldIdx]
+		}
+		constraints[i].uIndices = newIndices
+	}
+
+	// 4. 預處理：建立受約束未知格索引到受影響約束的映射
+	uIdxToConstraints := make([][]int, constrainedCount)
 	for i, cst := range constraints {
 		for _, uIdx := range cst.uIndices {
 			uIdxToConstraints[uIdx] = append(uIdxToConstraints[uIdx], i)
@@ -89,12 +121,12 @@ func Solve(g *model.Grid) *Result {
 	}
 
 	totalValidConfigs := 0
-	mineCounts := make([]int, len(unknownPos))
-	currentMines := make([]bool, len(unknownPos))
+	mineCounts := make([]int, constrainedCount)
+	currentMines := make([]bool, constrainedCount)
 	iterations := 0
-	const maxIterations = 1000000 // 安全限制：預防過度計算
+	const maxIterations = 10000000 // 增加安全限制到 1000 萬次
 
-	// 4. 回溯法 (優化後的剪枝檢查)
+	// 5. 回溯法 (僅針對受約束的格子)
 	var backtrack func(uIdx int)
 	backtrack = func(uIdx int) {
 		iterations++
@@ -112,9 +144,9 @@ func Solve(g *model.Grid) *Result {
 			}
 		}
 
-		if uIdx == len(unknownPos) {
+		if uIdx == constrainedCount {
 			totalValidConfigs++
-			for i := range unknownPos {
+			for i := 0; i < constrainedCount; i++ {
 				if currentMines[i] {
 					mineCounts[i]++
 				}
@@ -134,13 +166,25 @@ func Solve(g *model.Grid) *Result {
 
 	if iterations > maxIterations {
 		res.Solvable = false // 標記為無法在時限內解出
+		res.Timeout = true
 	}
 
+	// 6. 設定機率
 	if totalValidConfigs > 0 {
-		for i, pos := range unknownPos {
+		// 受約束的格子
+		for i, originalIdx := range constrainedToOriginal {
+			pos := unknownPos[originalIdx]
 			res.Probabilities[pos[0]][pos[1]] = float64(mineCounts[i]) / float64(totalValidConfigs)
 		}
+		// 未受約束的格子，預設機率為 50%
+		for i, constrained := range isConstrained {
+			if !constrained {
+				pos := unknownPos[i]
+				res.Probabilities[pos[0]][pos[1]] = 0.5
+			}
+		}
 	} else if len(unknownPos) > 0 {
+		// 如果完全沒有合法組合且有未知格，視為矛盾 (或因超限未算出)
 		res.Solvable = false
 	}
 

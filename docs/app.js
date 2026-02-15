@@ -1,5 +1,6 @@
 const go = new Go();
-let size = 3;
+let rows = 3;
+let cols = 3;
 let cells = []; // 儲存每個格子的狀態
 
 // 初始化 WASM
@@ -8,38 +9,13 @@ WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((resu
     console.log("Go WASM Loaded");
 });
 
-function initGrid(oldSize = size) {
-    const gridEl = document.getElementById('grid');
-    gridEl.style.gridTemplateColumns = `repeat(${size}, 50px)`;
-    gridEl.innerHTML = '';
-
-    const offset = Math.floor((size - oldSize) / 2);
-
-    // 初始化資料
-    const newCells = [];
-    for (let r = 0; r < size; r++) {
-        for (let c = 0; c < size; c++) {
-            // 尋找舊座標系統中的相對應格子
-            const oldR = r - offset;
-            const oldC = c - offset;
-            let existing = cells.find(it => it.r === oldR && it.c === oldC);
-
-            newCells.push({
-                r: r,
-                c: c,
-                state: existing ? existing.state : -1
-            });
-        }
-    }
-    cells = newCells;
-
+function initGrid() {
     renderGrid();
 }
 
-let focusedIndex = null;
-
 function renderGrid() {
     const gridEl = document.getElementById('grid');
+    gridEl.style.gridTemplateColumns = `repeat(${cols}, 50px)`;
     gridEl.innerHTML = '';
 
     cells.forEach((cell, index) => {
@@ -73,9 +49,9 @@ function renderGrid() {
             } else if (e.key === 'ArrowLeft') {
                 focusedIndex = Math.max(0, index - 1);
             } else if (e.key === 'ArrowDown') {
-                focusedIndex = Math.min(cells.length - 1, index + size);
+                focusedIndex = Math.min(cells.length - 1, index + cols);
             } else if (e.key === 'ArrowUp') {
-                focusedIndex = Math.max(0, index - size);
+                focusedIndex = Math.max(0, index - cols);
             } else {
                 handled = false;
             }
@@ -120,25 +96,55 @@ function renderGrid() {
     });
 }
 
-function getCellClass(state) {
-    if (state === -1) return 'unknown';
-    if (state === -2) return 'flag';
-    if (state === 0) return 'empty';
-    return `n${state}`;
+// 初始化資料
+for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+        cells.push({ r, c, state: -1 });
+    }
 }
 
-function getCellText(state) {
-    if (state === -1) return '';
-    if (state === -2) return '🚩';
-    if (state === 0) return '';
-    return state;
+function addRow(top) {
+    const newRow = [];
+    for (let c = 0; c < cols; c++) {
+        newRow.push({ state: -1 });
+    }
+    if (top) {
+        cells = [...newRow, ...cells];
+    } else {
+        cells = [...cells, ...newRow];
+    }
+    rows++;
+    renderGrid();
 }
 
-function changeSize(delta) {
-    const oldSize = size;
-    size = Math.max(1, size + delta);
-    if (size === oldSize) return;
-    initGrid(oldSize);
+function removeRow(top) {
+    if (rows <= 1) return;
+    if (top) {
+        cells.splice(0, cols);
+    } else {
+        cells.splice((rows - 1) * cols, cols);
+    }
+    rows--;
+    renderGrid();
+}
+
+function addCol(left) {
+    for (let r = 0; r < rows; r++) {
+        const index = left ? r * (cols + 1) : r * (cols + 1) + cols;
+        cells.splice(index, 0, { state: -1 });
+    }
+    cols++;
+    renderGrid();
+}
+
+function removeCol(left) {
+    if (cols <= 1) return;
+    for (let r = 0; r < rows; r++) {
+        const index = left ? r * (cols - 1) : r * (cols - 1) + (cols - 1);
+        cells.splice(index, 1);
+    }
+    cols--;
+    renderGrid();
 }
 
 function resetGrid() {
@@ -155,7 +161,7 @@ function solve() {
 
     // 將狀態轉為 Go 預期的格式
     const states = cells.map(c => c.state);
-    const result = solveMinesweeper(size, states);
+    const result = solveMinesweeper(rows, cols, states);
 
     if (!result.solvable) {
         if (result.timeout) {
@@ -180,6 +186,20 @@ function solve() {
         cell.probability = probabilities[i];
     });
     renderGrid();
+}
+
+function getCellClass(state) {
+    if (state === -1) return 'unknown';
+    if (state === -2) return 'flag';
+    if (state === 0) return 'empty';
+    return `n${state}`;
+}
+
+function getCellText(state) {
+    if (state === -1) return '';
+    if (state === -2) return '🚩';
+    if (state === 0) return '';
+    return state;
 }
 
 // 啟動

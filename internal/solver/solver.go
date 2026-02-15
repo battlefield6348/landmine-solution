@@ -14,17 +14,17 @@ type Result struct {
 // Solve 計算盤面上每個未知格子的地雷機率
 func Solve(g *model.Grid) *Result {
 	res := &Result{
-		Probabilities: make([][]float64, g.Size),
+		Probabilities: make([][]float64, g.Rows),
 		Solvable:      true,
 	}
-	for i := 0; i < g.Size; i++ {
-		res.Probabilities[i] = make([]float64, g.Size)
+	for i := 0; i < g.Rows; i++ {
+		res.Probabilities[i] = make([]float64, g.Cols)
 	}
 
 	// 1. 找出所有未解格子
 	var unknownPos [][2]int
-	for r := 0; r < g.Size; r++ {
-		for c := 0; c < g.Size; c++ {
+	for r := 0; r < g.Rows; r++ {
+		for c := 0; c < g.Cols; c++ {
 			if g.Cells[r][c].State == model.StateUnknown {
 				unknownPos = append(unknownPos, [2]int{r, c})
 			}
@@ -37,8 +37,8 @@ func Solve(g *model.Grid) *Result {
 
 	// 2. 預處理：找出所有會被未知格影響的「數字約束格」
 	constraints := []constraint{}
-	for r := 0; r < g.Size; r++ {
-		for c := 0; c < g.Size; c++ {
+	for r := 0; r < g.Rows; r++ {
+		for c := 0; c < g.Cols; c++ {
 			state := g.Cells[r][c].State
 			if state < 0 {
 				continue
@@ -59,7 +59,7 @@ func Solve(g *model.Grid) *Result {
 						continue
 					}
 					nr, nc := r+dr, c+dc
-					if nr >= 0 && nr < g.Size && nc >= 0 && nc < g.Size {
+					if nr >= 0 && nr < g.Rows && nc >= 0 && nc < g.Cols {
 						// 盤面內的鄰居
 						if g.Cells[nr][nc].State == model.StateFlag {
 							cst.knownMines++

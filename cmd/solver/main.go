@@ -11,17 +11,19 @@ import (
 )
 
 func main() {
-	grid := model.NewGrid(3)
+	grid := model.NewGrid(3, 3)
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		displayResult(grid)
 		fmt.Println("\n[指令說明]")
 		fmt.Println("- 's c r v' : 修改座標 (欄 c, 列 r) 值為 v (例: s 1 0 2)")
 		fmt.Println("- 直接輸入全部符號 : 批次更新 (例: 1 u u 1 f ...)")
-		fmt.Println("- 指令: 'expand' (放寬), 'shrink' (縮小), 'empty' (清空), 'exit' (結束)")
+		fmt.Println("- 擴展: 'at' (上), 'ab' (下), 'al' (左), 'ar' (右)")
+		fmt.Println("- 縮減: 'rt' (上), 'rb' (下), 'rl' (左), 'rr' (右)")
+		fmt.Println("- 指令: 'empty' (清空), 'exit' (結束)")
 		fmt.Println("- 符號: 0-8, e (空白/0), u (未解), f (旗幟)")
 
-		fmt.Printf("\n[尺寸 %dx%d] 請輸入指令或內容: ", grid.Size, grid.Size)
+		fmt.Printf("\n[尺寸 %dx%d] 請輸入指令或內容: ", grid.Cols, grid.Rows)
 
 		if !scanner.Scan() {
 			break
@@ -35,25 +37,45 @@ func main() {
 			break
 		}
 
-		if input == "expand" {
-			grid.Resize(grid.Size + 2)
-			fmt.Printf("✅ 盤面已擴展為 %dx%d (各邊加一排)\n", grid.Size, grid.Size)
+		// 擴展指令
+		switch input {
+		case "at":
+			grid.AddRow(true)
+			fmt.Println("✅ 頂部已增加一列")
 			continue
-		}
-
-		if input == "shrink" {
-			if grid.Size > 2 {
-				grid.Resize(grid.Size - 2)
-				fmt.Printf("✅ 盤面已縮減為 %dx%d (各邊縮一排)\n", grid.Size, grid.Size)
-			} else {
-				fmt.Println("❌ 錯誤: 尺寸已達最小值 (須大於 2 才能對稱縮小)")
-			}
+		case "ab":
+			grid.AddRow(false)
+			fmt.Println("✅ 底部已增加一列")
+			continue
+		case "al":
+			grid.AddCol(true)
+			fmt.Println("✅ 左側已增加一欄")
+			continue
+		case "ar":
+			grid.AddCol(false)
+			fmt.Println("✅ 右側已增加一欄")
+			continue
+		case "rt":
+			grid.RemoveRow(true)
+			fmt.Println("✅ 頂部已移除一列")
+			continue
+		case "rb":
+			grid.RemoveRow(false)
+			fmt.Println("✅ 底部已移除一列")
+			continue
+		case "rl":
+			grid.RemoveCol(true)
+			fmt.Println("✅ 左側已移除一欄")
+			continue
+		case "rr":
+			grid.RemoveCol(false)
+			fmt.Println("✅ 右側已移除一欄")
 			continue
 		}
 
 		if input == "empty" {
-			grid = model.NewGrid(grid.Size)
-			fmt.Printf("✅ 盤面 (%dx%d) 已清空\n", grid.Size, grid.Size)
+			grid = model.NewGrid(grid.Rows, grid.Cols)
+			fmt.Printf("✅ 盤面 (%dx%d) 已清空\n", grid.Cols, grid.Rows)
 			continue
 		}
 
@@ -67,7 +89,7 @@ func main() {
 			if len(tokens) == 4 {
 				c, errC := strconv.Atoi(tokens[1])
 				r, errR := strconv.Atoi(tokens[2])
-				if errR == nil && errC == nil && c >= 0 && c < grid.Size && r >= 0 && r < grid.Size {
+				if errR == nil && errC == nil && c >= 0 && c < grid.Cols && r >= 0 && r < grid.Rows {
 					if updateCell(grid, r, c, tokens[3]) {
 						fmt.Printf("✅ 已將座標 (欄%d, 列%d) 更新為 %s\n", c, r, tokens[3])
 						continue
@@ -82,7 +104,7 @@ func main() {
 		if len(tokens) == 3 {
 			c, errC := strconv.Atoi(tokens[0])
 			r, errR := strconv.Atoi(tokens[1])
-			if errR == nil && errC == nil && c >= 0 && c < grid.Size && r >= 0 && r < grid.Size {
+			if errR == nil && errC == nil && c >= 0 && c < grid.Cols && r >= 0 && r < grid.Rows {
 				if updateCell(grid, r, c, tokens[2]) {
 					fmt.Printf("✅ 已將座標 (欄%d, 列%d) 更新為 %s\n", c, r, tokens[2])
 					continue
@@ -90,12 +112,12 @@ func main() {
 			}
 		}
 
-		// 3. 處理批次更新 (tokens 數量必須等於 Size * Size)
-		expectedCount := grid.Size * grid.Size
+		// 3. 處理批次更新 (tokens 數量必須等於 Rows * Cols)
+		expectedCount := grid.Rows * grid.Cols
 		if len(tokens) == expectedCount {
 			valid := true
 			for i, t := range tokens {
-				r, c := i/grid.Size, i%grid.Size
+				r, c := i/grid.Cols, i%grid.Cols
 				if !updateCell(grid, r, c, t) {
 					fmt.Printf("❌ 符號 '%s' 無效 (索引 %d)\n", t, i)
 					valid = false
@@ -107,8 +129,8 @@ func main() {
 				continue
 			}
 		} else {
-			fmt.Printf("❌ 輸入格式不符：目前 %dx%d 盤面需要 %d 個符號，但你輸入了 %d 個\n", grid.Size, grid.Size, expectedCount, len(tokens))
-			fmt.Println("   提示：單格修改請用 's r c v' (例: s 0 1 2)")
+			fmt.Printf("❌ 輸入格式不符：目前 %dx%d 盤面需要 %d 個符號，但你輸入了 %d 個\n", grid.Cols, grid.Rows, expectedCount, len(tokens))
+			fmt.Println("   提示：單格修改請用 's c r v' (例: s 1 0 2)")
 			continue
 		}
 	}
@@ -139,22 +161,22 @@ func displayResult(grid *model.Grid) {
 
 	// 1. 打印頂部列索引
 	fmt.Print("    ") // 對應左側列索引的空白
-	for c := 0; c < grid.Size; c++ {
+	for c := 0; c < grid.Cols; c++ {
 		fmt.Printf("   C%-2d  ", c) // 固定寬度 8
 	}
 	fmt.Println()
 
 	// 2. 打印分隔線
 	fmt.Print("    ")
-	for c := 0; c < grid.Size; c++ {
+	for c := 0; c < grid.Cols; c++ {
 		fmt.Print("--------")
 	}
 	fmt.Println()
 
 	// 3. 打印每一列內容
-	for r := 0; r < grid.Size; r++ {
+	for r := 0; r < grid.Rows; r++ {
 		fmt.Printf("R%d |", r) // 左側列索引
-		for c := 0; c < grid.Size; c++ {
+		for c := 0; c < grid.Cols; c++ {
 			state := grid.Cells[r][c].State
 			var content string
 			if state == model.StateUnknown {
@@ -170,7 +192,7 @@ func displayResult(grid *model.Grid) {
 
 		// 打印列與列之間的分隔線
 		fmt.Print("   ")
-		for c := 0; c < grid.Size; c++ {
+		for c := 0; c < grid.Cols; c++ {
 			fmt.Print(" --------")
 		}
 		fmt.Println()

@@ -20,16 +20,17 @@ func main() {
 }
 
 func solve(this js.Value, args []js.Value) any {
-	if len(args) < 2 {
+	if len(args) < 3 {
 		return nil
 	}
 
-	size := args[0].Int()
-	inputCells := args[1]
+	rows := args[0].Int()
+	cols := args[1].Int()
+	inputCells := args[2]
 
-	grid := model.NewGrid(size)
-	for i := 0; i < size*size; i++ {
-		r, c := i/size, i%size
+	grid := model.NewGrid(rows, cols)
+	for i := 0; i < rows*cols; i++ {
+		r, c := i/cols, i%cols
 		stateVal := inputCells.Index(i).Int()
 		grid.Cells[r][c].State = model.CellState(stateVal)
 	}
@@ -37,10 +38,10 @@ func solve(this js.Value, args []js.Value) any {
 	result := solver.Solve(grid)
 
 	// 將結果轉換為 JavaScript 陣列
-	probabilities := js.Global().Get("Array").New(size * size)
-	for r := 0; r < size; r++ {
-		for c := 0; c < size; c++ {
-			probabilities.SetIndex(r*size+c, result.Probabilities[r][c])
+	probabilities := js.Global().Get("Array").New(rows * cols)
+	for r := 0; r < rows; r++ {
+		for c := 0; c < cols; c++ {
+			probabilities.SetIndex(r*cols+c, result.Probabilities[r][c])
 		}
 	}
 

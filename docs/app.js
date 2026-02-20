@@ -2,6 +2,7 @@ const go = new Go();
 let rows = 3;
 let cols = 3;
 let cells = []; // 儲存每個格子的狀態
+let focusedIndex = null;
 
 // 初始化 WASM
 WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {

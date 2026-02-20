@@ -34,9 +34,12 @@ body {
     border-radius: 20px;
     padding: 2rem;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-    max-width: 600px;
-    width: 90%;
+    width: fit-content;
+    max-width: 95vw;
+    margin: 2rem auto;
     text-align: center;
+    overflow-x: auto;
+    /* 允許在大盤面時出現水平捲軸 */
 }
 
 h1 {
@@ -54,7 +57,7 @@ h1 {
     background: rgba(0, 0, 0, 0.2);
     padding: 12px;
     border-radius: 12px;
-    margin-bottom: 1.5rem;
+    flex-shrink: 0;
 }
 
 .cell {
@@ -146,6 +149,7 @@ h1 {
     padding: 6px;
     border-radius: 10px;
     border: 1px solid var(--border);
+    flex-shrink: 0;
 }
 
 .top-ctrl,

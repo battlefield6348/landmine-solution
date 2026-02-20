@@ -53,6 +53,8 @@ function renderGrid() {
                 focusedIndex = Math.min(cells.length - 1, index + cols);
             } else if (e.key === 'ArrowUp') {
                 focusedIndex = Math.max(0, index - cols);
+            } else if (e.key === 'Enter') {
+                solve();
             } else {
                 handled = false;
             }
@@ -205,3 +207,14 @@ function getCellText(state) {
 
 // 啟動
 initGrid();
+
+// 全域快捷鍵
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        const activeElement = document.activeElement;
+        // 如果目前沒在輸入（例如沒在 focus 按鈕），就執行計算
+        if (activeElement.tagName !== 'BUTTON') {
+            solve();
+        }
+    }
+});

@@ -150,8 +150,24 @@ function removeCol(left) {
     renderGrid();
 }
 
+function updateShiftModeText() {
+    const isInverse = document.getElementById('shiftMode').checked;
+    document.getElementById('shiftModeText').innerText = isInverse ? '逆向平移 (視角)' : '順向平移 (內容)';
+}
+
 function shiftGrid(direction) {
-    console.log("Shifting content:", direction);
+    const isInverse = document.getElementById('shiftMode').checked;
+    let actualDir = direction;
+
+    // 如果是逆向模式，平移方向要相反
+    if (isInverse) {
+        if (direction === 'up') actualDir = 'down';
+        else if (direction === 'down') actualDir = 'up';
+        else if (direction === 'left') actualDir = 'right';
+        else if (direction === 'right') actualDir = 'left';
+    }
+
+    console.log("Shifting content:", actualDir, isInverse ? "(Inverse Mode)" : "(Normal Mode)");
 
     // 建立一個新的空白盤面資料
     const newCells = [];
@@ -170,10 +186,10 @@ function shiftGrid(direction) {
         let nr = r;
         let nc = c;
 
-        if (direction === 'up') nr--;
-        else if (direction === 'down') nr++;
-        else if (direction === 'left') nc--;
-        else if (direction === 'right') nc++;
+        if (actualDir === 'up') nr--;
+        else if (actualDir === 'down') nr++;
+        else if (actualDir === 'left') nc--;
+        else if (actualDir === 'right') nc++;
 
         if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
             const newIndex = nr * cols + nc;
@@ -192,10 +208,10 @@ function shiftGrid(direction) {
     if (focusedIndex !== null) {
         let r = Math.floor(focusedIndex / cols);
         let c = focusedIndex % cols;
-        if (direction === 'up') r--;
-        else if (direction === 'down') r++;
-        else if (direction === 'left') c--;
-        else if (direction === 'right') c++;
+        if (actualDir === 'up') r--;
+        else if (actualDir === 'down') r++;
+        else if (actualDir === 'left') c--;
+        else if (actualDir === 'right') c++;
 
         if (r >= 0 && r < rows && c >= 0 && c < cols) {
             focusedIndex = r * cols + c;

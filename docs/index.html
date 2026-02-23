@@ -65,6 +65,13 @@
         <div class="actions">
             <button onclick="resetGrid()">Empty</button>
             <button class="primary" onclick="solve()">Calculate</button>
+            <div class="toggle-container" title="決定點擊箭頭時，是內容移動(順向)還是盤面視角移動(逆向)">
+                <label class="switch">
+                    <input type="checkbox" id="shiftMode" onchange="updateShiftModeText()">
+                    <span class="slider round"></span>
+                </label>
+                <span id="shiftModeText">順向平移</span>
+            </div>
         </div>
 
         <div class="legend">

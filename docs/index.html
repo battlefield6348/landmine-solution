@@ -30,6 +30,7 @@
             <div class="side-ctrl top-ctrl">
                 <button onclick="addRow(true)" title="Add Row Top">+</button>
                 <button onclick="removeRow(true)" title="Remove Row Top">-</button>
+                <button onclick="shiftGrid('up')" title="Shift Content Up">↑</button>
             </div>
 
             <div class="middle-row">
@@ -37,6 +38,7 @@
                 <div class="side-ctrl left-ctrl">
                     <button onclick="addCol(true)" title="Add Col Left">+</button>
                     <button onclick="removeCol(true)" title="Remove Col Left">-</button>
+                    <button onclick="shiftGrid('left')" title="Shift Content Left">←</button>
                 </div>
 
                 <!-- Central Grid -->
@@ -48,6 +50,7 @@
                 <div class="side-ctrl right-ctrl">
                     <button onclick="addCol(false)" title="Add Col Right">+</button>
                     <button onclick="removeCol(false)" title="Remove Col Right">-</button>
+                    <button onclick="shiftGrid('right')" title="Shift Content Right">→</button>
                 </div>
             </div>
 
@@ -55,6 +58,7 @@
             <div class="side-ctrl bottom-ctrl">
                 <button onclick="addRow(false)" title="Add Row Bottom">+</button>
                 <button onclick="removeRow(false)" title="Remove Row Bottom">-</button>
+                <button onclick="shiftGrid('down')" title="Shift Content Down">↓</button>
             </div>
         </div>
 

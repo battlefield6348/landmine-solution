@@ -150,6 +150,33 @@ function removeCol(left) {
     renderGrid();
 }
 
+function shiftGrid(direction) {
+    const newCells = Array.from({ length: rows * cols }, () => ({ state: -1 }));
+
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            const oldIndex = r * cols + c;
+            let nr = r;
+            let nc = c;
+
+            if (direction === 'up') nr--;
+            else if (direction === 'down') nr++;
+            else if (direction === 'left') nc--;
+            else if (direction === 'right') nc++;
+
+            if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+                const newIndex = nr * cols + nc;
+                newCells[newIndex].state = cells[oldIndex].state;
+                if (cells[oldIndex].probability !== undefined) {
+                    newCells[newIndex].probability = cells[oldIndex].probability;
+                }
+            }
+        }
+    }
+    cells = newCells;
+    renderGrid();
+}
+
 function resetGrid() {
     cells.forEach(c => c.state = -1);
     cells.forEach(c => c.probability = undefined);

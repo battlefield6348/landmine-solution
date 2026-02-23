@@ -91,6 +91,39 @@ func (g *Grid) RemoveCol(left bool) {
 	g.Cols--
 }
 
+// Shift 將盤面內容向指定方向平移一格
+// direction: "up", "down", "left", "right"
+func (g *Grid) Shift(direction string) {
+	newCells := make([][]Cell, g.Rows)
+	for r := 0; r < g.Rows; r++ {
+		newCells[r] = make([]Cell, g.Cols)
+		for c := 0; c < g.Cols; c++ {
+			newCells[r][c] = Cell{State: StateUnknown}
+		}
+	}
+
+	for r := 0; r < g.Rows; r++ {
+		for c := 0; c < g.Cols; c++ {
+			nr, nc := r, c
+			switch direction {
+			case "up":
+				nr--
+			case "down":
+				nr++
+			case "left":
+				nc--
+			case "right":
+				nc++
+			}
+
+			if nr >= 0 && nr < g.Rows && nc >= 0 && nc < g.Cols {
+				newCells[nr][nc] = g.Cells[r][c]
+			}
+		}
+	}
+	g.Cells = newCells
+}
+
 
 // GetNeighbors 取得坐標 (r, c) 周圍的鄰居座標
 func (g *Grid) GetNeighbors(r, c int) [][2]int {

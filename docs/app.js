@@ -151,30 +151,62 @@ function removeCol(left) {
 }
 
 function shiftGrid(direction) {
-    const newCells = Array.from({ length: rows * cols }, () => ({ state: -1 }));
+    console.log("Shifting content:", direction);
 
-    for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
-            const oldIndex = r * cols + c;
-            let nr = r;
-            let nc = c;
+    // 建立一個新的空白盤面資料
+    const newCells = [];
+    for (let i = 0; i < rows * cols; i++) {
+        newCells.push({
+            r: Math.floor(i / cols),
+            c: i % cols,
+            state: -1
+        });
+    }
 
-            if (direction === 'up') nr--;
-            else if (direction === 'down') nr++;
-            else if (direction === 'left') nc--;
-            else if (direction === 'right') nc++;
+    // 將舊盤面內容移動到新盤面的對應位置
+    cells.forEach((cell, i) => {
+        let r = Math.floor(i / cols);
+        let c = i % cols;
+        let nr = r;
+        let nc = c;
 
-            if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
-                const newIndex = nr * cols + nc;
-                newCells[newIndex].state = cells[oldIndex].state;
-                if (cells[oldIndex].probability !== undefined) {
-                    newCells[newIndex].probability = cells[oldIndex].probability;
-                }
+        if (direction === 'up') nr--;
+        else if (direction === 'down') nr++;
+        else if (direction === 'left') nc--;
+        else if (direction === 'right') nc++;
+
+        if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
+            const newIndex = nr * cols + nc;
+            newCells[newIndex].state = cell.state;
+            if (cell.probability !== undefined) {
+                newCells[newIndex].probability = cell.probability;
             }
         }
-    }
+    });
+
+    // 更新全域狀態並重新渲染
     cells = newCells;
     renderGrid();
+
+    // 如果原本有聚焦的位置，嘗試平移聚焦框
+    if (focusedIndex !== null) {
+        let r = Math.floor(focusedIndex / cols);
+        let c = focusedIndex % cols;
+        if (direction === 'up') r--;
+        else if (direction === 'down') r++;
+        else if (direction === 'left') c--;
+        else if (direction === 'right') c++;
+
+        if (r >= 0 && r < rows && c >= 0 && c < cols) {
+            focusedIndex = r * cols + c;
+            const allCells = document.querySelectorAll('.cell');
+            if (allCells[focusedIndex]) {
+                allCells[focusedIndex].focus();
+            }
+        } else {
+            focusedIndex = null;
+        }
+    }
 }
 
 function resetGrid() {

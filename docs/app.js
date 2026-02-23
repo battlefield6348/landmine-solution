@@ -11,6 +11,7 @@ WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((resu
 });
 
 function initGrid() {
+    updateShiftModeText();
     renderGrid();
 }
 

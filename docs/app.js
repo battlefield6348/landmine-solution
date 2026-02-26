@@ -281,6 +281,21 @@ function getCellText(state) {
     return state;
 }
 
+function inputState(state) {
+    if (focusedIndex === null) {
+        alert("請先點擊盤面上的格子再輸入內容");
+        return;
+    }
+    cells[focusedIndex].state = state;
+    renderGrid();
+
+    // 保持聚焦
+    const allCells = document.querySelectorAll('.cell');
+    if (allCells[focusedIndex]) {
+        allCells[focusedIndex].focus();
+    }
+}
+
 // 啟動
 initGrid();
 

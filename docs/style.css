@@ -75,6 +75,7 @@ h1 {
     position: relative;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     user-select: none;
+    touch-action: manipulation;
 }
 
 .cell:hover {
@@ -257,6 +258,7 @@ button {
     font-weight: 600;
     transition: all 0.2s;
     font-family: inherit;
+    touch-action: manipulation;
 }
 
 button:hover {
@@ -283,4 +285,60 @@ button.primary {
     padding: 12px 20px;
     border-radius: 12px;
     border: 1px solid var(--border);
+}
+
+.keypad {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+
+.keypad button {
+    width: 45px;
+    height: 45px;
+    padding: 0;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.keypad .btn-f {
+    color: #ff7b72;
+    background: #3e2020;
+}
+
+.keypad .btn-u {
+    color: #8b949e;
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 1rem;
+    }
+
+    .cell {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    .grid-container {
+        gap: 4px;
+        padding: 8px;
+    }
+
+    .side-ctrl button {
+        width: 36px;
+        height: 36px;
+    }
+
+    .keypad button {
+        width: 46px;
+        height: 46px;
+    }
 }
